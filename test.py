@@ -35,16 +35,21 @@ class TestSuite(unittest.TestCase):
         return Store()
 
     def get_response(self, request):
-        return api.method_handler({"body": request, "headers": self.headers}, self.context, self.store)
-
+        return api.method_handler(
+            {"body": request, "headers": self.headers}, self.context, self.store
+        )
 
     def set_valid_auth(self, request):
         if request.get("login") == api.ADMIN_LOGIN:
             request["token"] = hashlib.sha512(
-                (datetime.datetime.now().strftime("%Y%m%d%H") + api.ADMIN_SALT).encode("utf-8")
+                (datetime.datetime.now().strftime("%Y%m%d%H") + api.ADMIN_SALT).encode(
+                    "utf-8"
+                )
             ).hexdigest()
         else:
-            msg = (request.get("account", "") + request.get("login", "") + api.SALT).encode("utf-8")
+            msg = (
+                request.get("account", "") + request.get("login", "") + api.SALT
+            ).encode("utf-8")
             request["token"] = hashlib.sha512(msg).hexdigest()
 
     def test_empty_request(self):
@@ -101,8 +106,18 @@ class TestSuite(unittest.TestCase):
             {"phone": "79175002040", "email": "stupnikovotus.ru"},
             {"phone": "79175002040", "email": "stupnikov@otus.ru", "gender": -1},
             {"phone": "79175002040", "email": "stupnikov@otus.ru", "gender": "1"},
-            {"phone": "79175002040", "email": "stupnikov@otus.ru", "gender": 1, "birthday": "01.01.1890"},
-            {"phone": "79175002040", "email": "stupnikov@otus.ru", "gender": 1, "birthday": "XXX"},
+            {
+                "phone": "79175002040",
+                "email": "stupnikov@otus.ru",
+                "gender": 1,
+                "birthday": "01.01.1890",
+            },
+            {
+                "phone": "79175002040",
+                "email": "stupnikov@otus.ru",
+                "gender": 1,
+                "birthday": "XXX",
+            },
             {
                 "phone": "79175002040",
                 "email": "stupnikov@otus.ru",
@@ -229,24 +244,29 @@ class TestSuite(unittest.TestCase):
         self.assertEqual(api.OK, code, (arguments, response))
         self.assertEqual(len(arguments["client_ids"]), len(response))
 
-
     @cases(
         [
             ({"phone": "79175002040", "email": "stupnikov@otus.ru"}, 3.0),
-            ({
-                "phone": "79175002040",
-                "email": "stupnikov@otus.ru",
-                "gender": 1,
-                "birthday": datetime.date(2000, 1, 1),
-                "first_name": "a",
-                "last_name": "b",
-            }, 5.0),
-            ({
-                 "phone": "79175002040",
-                 "email": "stupnikov@otus.ru",
-                 "gender": 1,
-                 "first_name": "a",
-             }, 3.0),
+            (
+                {
+                    "phone": "79175002040",
+                    "email": "stupnikov@otus.ru",
+                    "gender": 1,
+                    "birthday": datetime.date(2000, 1, 1),
+                    "first_name": "a",
+                    "last_name": "b",
+                },
+                5.0,
+            ),
+            (
+                {
+                    "phone": "79175002040",
+                    "email": "stupnikov@otus.ru",
+                    "gender": 1,
+                    "first_name": "a",
+                },
+                3.0,
+            ),
         ]
     )
     def test_get_score(self, data, expected):
@@ -259,7 +279,7 @@ class TestSuite(unittest.TestCase):
         ]
     )
     def test_get_interests(self, data, expected):
-        cid = data.get('cid')
+        cid = data.get("cid")
         self.store.cache_set(f"i:{cid}", json.dumps(expected), 60 * 60)
         self.assertEqual(get_interests(self.store, cid), expected)
 

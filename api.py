@@ -76,6 +76,7 @@ class EmailField(CharField):
         if value and not re.match(r"[^@]+@[^@]+\.[^@]+", value):
             raise ValueError(f"Field '{self.name}' has an invalid email format.")
 
+
 class PhoneField(Field):
 
     def validate(self, value):
@@ -84,7 +85,9 @@ class PhoneField(Field):
                 raise ValueError(f"Field '{self.name}' must be a string or a number.")
             value_str = str(value)
             if len(value_str) != 11 or not value_str.startswith("7"):
-                raise ValueError(f"Field '{self.name}' must be 11 characters long and start with '7'.")
+                raise ValueError(
+                    f"Field '{self.name}' must be 11 characters long and start with '7'."
+                )
 
 
 class DateField(CharField):
@@ -101,7 +104,9 @@ class BirthDayField(DateField):
     def get_age(dob):
         today = datetime.date.today()
         years = today.year - dob.year
-        if today.month < dob.month or (today.month == dob.month and today.day < dob.day):
+        if today.month < dob.month or (
+            today.month == dob.month and today.day < dob.day
+        ):
             years -= 1
         return years
 
@@ -201,7 +206,9 @@ class OnlineScoreRequest(Request):
             or (self.first_name is not None and self.last_name is not None)
             or (self.gender is not None and self.birthday is not None)
         ):
-            raise ValueError("At least one pair phone-email, first name-last name, gender-birthday is required.")
+            raise ValueError(
+                "At least one pair phone-email, first name-last name, gender-birthday is required."
+            )
 
     def get_score(self, store):
         return {
@@ -209,7 +216,9 @@ class OnlineScoreRequest(Request):
                 store,
                 phone=self.phone,
                 email=self.email,
-                birthday=BirthDayField.get_value(self.birthday) if self.birthday else None,
+                birthday=(
+                    BirthDayField.get_value(self.birthday) if self.birthday else None
+                ),
                 gender=self.gender,
                 first_name=self.first_name,
                 last_name=self.last_name,
@@ -224,7 +233,9 @@ class MethodRequest(Request):
     arguments = ArgumentsField(name="arguments", required=True, nullable=True)
     method = CharField(name="method", required=True, nullable=False)
 
-    def __init__(self, account=None, login=None, token=None, arguments=None, method=None):
+    def __init__(
+        self, account=None, login=None, token=None, arguments=None, method=None
+    ):
         self.account = account
         self.login = login
         self.token = token
@@ -241,9 +252,13 @@ class MethodRequest(Request):
 
 def check_auth(request):
     if request.is_admin:
-        digest = hashlib.sha512((datetime.datetime.now().strftime("%Y%m%d%H") + ADMIN_SALT).encode("utf-8")).hexdigest()
+        digest = hashlib.sha512(
+            (datetime.datetime.now().strftime("%Y%m%d%H") + ADMIN_SALT).encode("utf-8")
+        ).hexdigest()
     else:
-        digest = hashlib.sha512((request.account + request.login + SALT).encode("utf-8")).hexdigest()
+        digest = hashlib.sha512(
+            (request.account + request.login + SALT).encode("utf-8")
+        ).hexdigest()
     return digest == request.token
 
 
@@ -304,7 +319,9 @@ class MainHTTPHandler(BaseHTTPRequestHandler):
             logging.info("%s: %s %s" % (self.path, data_string, context["request_id"]))
             if path in self.router:
                 try:
-                    response, code = self.router[path]({"body": request, "headers": self.headers}, context, self.store)
+                    response, code = self.router[path](
+                        {"body": request, "headers": self.headers}, context, self.store
+                    )
                 except Exception as e:
                     logging.exception("Unexpected error: %s" % e)
                     code = INTERNAL_ERROR
@@ -342,4 +359,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         pass
     server.server_close()
-
